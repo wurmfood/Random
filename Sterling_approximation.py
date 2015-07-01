@@ -38,9 +38,13 @@ def sterling_approximation(n):
 #
 #################################
 def sterling_approximation2(n):
-    n_fact = math.factorial(n)
-    st_approx = math.pow(n, n)*math.exp(-n)*math.sqrt(2*math.pi*n)
-    err = math.fabs((n_fact - st_approx)/n_fact)
+    n_fact, st_approx, err = 0, 0, 0
+    try:
+        n_fact = math.factorial(n)
+        st_approx = math.pow(n, n)*math.exp(-n)*math.sqrt(2*math.pi*n)
+        err = math.fabs((n_fact - st_approx)/n_fact)
+    except OverflowError:
+        n_fact, st_approx, err = 0, 0, 0
     return n_fact, st_approx, err
 
 
@@ -62,6 +66,8 @@ def main(argv):
                   '\t {2: >10.5f} \t {3: >8.3%} '
                   '\t {4: >10.5e} \t {5: >10.5e} '
                   '\t {6: >8.3%}'.format(i, *results))
+    except OverflowError:
+        pass
     finally:
         pass
 
