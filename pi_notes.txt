@@ -1,0 +1,125 @@
+Notes on setting up a minimum image of debian on Raspberry Pi.
+
+Basic minimum image to use:
+http://www.linuxsystems.it/raspbian-wheezy-armhf-raspberry-pi-minimal-image/
+
+put the image on the disk:
+sudo dd bs=1M if=raspbian_wheezy_20140726.img of=/dev/sde
+
+Use gpartd on desktop to resize the images.
+set / partition to 4096 Mb
+set /data partition to 56320 Mb
+Swap at end
+
+fix fstab:
+# <file system> <mount point>   <type>          <options>               <dump>  <pass>
+proc            /proc           proc            defaults                0       0
+/dev/mmcblk0p1  /boot           vfat            defaults                0       0
+/dev/mmcblk0p3  /data           ext4            noatime,async,auto,suid,rw,noexec       0       2
+/dev/mmcblk0p4  none            swap            sw                      0       0
+
+
+Note: can mount the partitions from the image using kpartx:
+sudo kpartx -a image.img
+
+Creates dev objects in /dev/mapper as loop* which can be mounted
+
+
+Update the sources list:
+deb http://mirrordirector.raspbian.org/raspbian jessie main contrib non-free
+deb http://archive.raspberrypi.org/debian jessie main
+
+prevent console from being cleared on boot:
+in /etc/inittab change:
+1:2345:respawn:/sbin/getty 38400 tty1
+to
+1:2345:respawn:/sbin/getty --noclear 38400 tty1
+(doesn't work. need to find what does)
+
+
+boot the Pi with the SD. If using the image from the website, do:
+dpkg-reconfigure tzdata
+dpkg-reconfigure console-data
+dpkg-reconfigure locales
+
+apt-get update, dist-upgrade
+
+Changes to /boot/config.txt:
+dtparam=i2c=on1=on
+dtparam=i2c_arm=on
+
+gpu_mem=128
+start_x=1
+---
+
+/etc/modules:
+snd-bcm2835
+rtc-ds1307
+i2c-bcm2708
+i2c-dev
+
+edit /boot/cmdline.txt
+remove console=ttyAMA0,115200 kgdboc=ttyAMA0,115200
+
+add to sources
+deb http://www.deb-multimedia.org jessie main
+(multimedia is for ffmpeg)
+
+apt-get update
+apt-get install deb-multimedia-keyring
+
+stuff to install via apt-get
+sudo
+firmware-realtek
+wpasupplicant
+python3
+python3-serial
+python3-pip
+python3-picamera
+python-smbus
+i2c-tools
+git
+vim
+libraspberrypi-{bin,dev,doc}
+
+add user pi to various groups:
+usermod -a -G video pi
+usermod -a -G sudo pi
+
+
+Setting up wireless: https://wiki.debian.org/WiFi/HowToUse#wpa_supplicant
+chmod 0600 /etc/network/interfaces
+wpa_passphrase myssid passphrase >> /etc/network/interfaces
+
+edit /etc/network/interfaces. clean up the wifi section so it looks like:
+auto wlan0
+iface wlan0 inet dhcp
+        wpa-ssid myssid
+        wpa-psk ccb290fd4fe6b22935cbae31449e050edd02ad44627b16ce0151668f5f53c01b
+        
+
+---
+hwclock:
+check to see if we're working:
+sudo i2cdetect -y 1 (on rpi2, for rpi1 use -y 0)
+0x68 should show up
+
+make sure the module is in place:
+sudo modprobe rtc-ds1307
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-0/new_device (if you have a rev 1 Pi)
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device (if you have a rev 2 Pi)
+
+set the clock:
+sudo hwclock -r
+
+add to /etc/rc.local:
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-0/new_device (for v1 raspberry pi)
+echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device (v2 raspberry pi)
+sudo hwclock -s (both versions)
+
+
+picamera stuff:
+https://picamera.readthedocs.org
+
+Some other useful stuff can be found at:
+http://elinux.org/R-Pi_Troubleshooting
