@@ -1,0 +1,7 @@
+# Set VirtualBox to use a different location as default for mounting shared
+folders:
+sudo VBoxControl guestproperty set /VirtualBox/GuestAdd/SharedFolders/MountDir
+/home/someone/somewhere
+
+# Also, remember to add the user to the vboxsf group:
+sudo usermod -a -G vboxsf user
