@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from math import sqrt, ceil
 from datetime import datetime
+# from threading import Thread
 
 # So, basic idea:
 # Look at odd numbers only (even numbers can't be prime)
@@ -26,11 +27,19 @@ def check_if_prime(target: int) -> bool:
 
 
 def main(max_number: int) -> None:
+    # Store the number of positive hits.
     count = 0
+
+    # Hold onto the start so we can see how long it takes.
     start_time = datetime.now()
-    for num in range(1, max_number):
+
+    # Only do every other number since any even number is divisible by two.
+    # It doesn't actually save much, since 2 is the first check made, but it's still the better option.
+    for num in range(1, max_number, 2):
         if check_if_prime(num):
             count += 1
+
+    # We're done. Print out the results.
     print("Total prime numbers from 0 to {0} : {1}".format(max_number, count))
     print("Time taken: {0}".format(datetime.now() - start_time))
 
